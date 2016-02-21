@@ -45,6 +45,7 @@ And the other **command** is
 ```
 You should use this command to **send words** to be shown on the console of the program. Remember to use the **end of line** character also.
 
+**Warning**: As the program is beta version it can crash suddenly if you send commands that do not respect the format. Please avoid doing that, only send messages that apply to the rules
 
 
 **Report any bug** to ariel.nowik@gmail.com. This program is **totally free** for all so feel free to use it, modify it or send feedback. Good Luck guys!
