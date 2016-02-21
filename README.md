@@ -34,13 +34,13 @@ You can **change the baudrate** when you enter a port, you should only click on 
 
 ### Which format should you use to send information to the program? ###
 You must use **json** format. This means the **two commands** you can use actually are
-```
+``` json
 "{'COM':'plot', 'name':'Plot 1','value':4564564}\n"
 ```
 to **plot** a point in the **graph**, where the 4564564 is the value to graph in that instant, and 'Plot 1' the name of the graph associated with it (the program autodetects when there is a new signal so no need of initial signal, just **update signals**). And remeber to set a '\n' (**end of line**) character after each signal sent because otherwise the program won't graph anything as it **will wait until the '\n' arrives** to divide the **signal**. If you want to **set the color** of the signal (rather than a random number) you can add a "color":(r,g,b) parameter altough I haven't tested yet it should work.
 
 And the other **command** is 
-```
+``` json
 "{'COM':'line','value':'This is a test of Serial Graphicator'}\n"
 ```
 You should use this command to **send words** to be shown on the console of the program. Remember to use the **end of line** character also.
