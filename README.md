@@ -81,7 +81,7 @@ instead of
 ```
 python graph.py
 ```
-you *type*
+you &*type*&
 ```
 sudo python graph.py
 ```
