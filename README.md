@@ -1,6 +1,7 @@
 # SerialGraphicator
 Open Source Free Serial Port Client capable of graph values that are received in **JSON format**
 You can do projects with, for example, **arduino** or **microcontrollers** to transform data sent from them to computer into fancy **graphics**.
+![alt tag](1456028654.02.png)
 
 ### Introduction ###
 
@@ -38,5 +39,15 @@ You should use this command to **send words** to be shown on the console of the 
 
 
 **Report any bug** to ariel.nowik@gmail.com. This program is **totally free** for all so feel free to use it, modify it or send feedback. Good Luck guys!
+
+
+### Screenshots ###
+![alt tag](1456028622.43.png)
+![alt tag](1456028628.79.png)
+![alt tag](1456028631.55.png)
+![alt tag](1456028638.35.png)
+![alt tag](1456028641.77.png)
+![alt tag](1456028649.37.png)
+![alt tag](1456028654.02.png)
 
 
