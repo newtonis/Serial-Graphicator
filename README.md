@@ -8,14 +8,14 @@ Hi. I'll explain how to use this simple but useful tool. First of all you need a
 
 
 The program should *detect the ports autonomously* and will test to check data of all of them with this *baudrates*
-*4800
-*9600
-*14400
-*19200
-*28800
-*38400
-*57600
-*115200
++4800
++9600
++14400
++19200
++28800
++38400
++57600
++115200
 
 . If something is recived in any port then the selector of that port will be highlighted. 
 
