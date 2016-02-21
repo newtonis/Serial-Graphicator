@@ -68,7 +68,6 @@ Easy and fast **instalation** and **run** for linux with commands (only *Linux*!
 
 ```
 sudo apt-get install python-pygame
-sudo apt-get install pyserial
 sudo apt-get install git
 git clone https://github.com/newtonis/SerialGraphicator/
 cd SerialGraphicator
