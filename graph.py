@@ -799,6 +799,7 @@ class ApplicationGlobal:
 		pygame.display.set_caption("Serial graphicator")
 		self.status = True
 		self.App = None
+		self.flag = False
 	def SetNewApp(self , app):
 		self.App = app
 		self.App.headGlobal = self
@@ -807,6 +808,15 @@ class ApplicationGlobal:
 		self.screen.fill((255,255,255))
 		self.App.Refresh()
 		pygame.display.update()
+		if not pygame.key.get_pressed()[pygame.K_LCTRL]:
+			self.flag = False
+		if not pygame.key.get_pressed()[pygame.K_LCTRL]:
+			self.flag = False
+		if pygame.key.get_pressed()[pygame.K_LCTRL] and pygame.key.get_pressed()[pygame.K_s] and not self.flag:
+			self.flag = True
+			name =  str( time.time() )+ ".png"
+			pygame.image.save(self.screen , str( time.time() )+ ".png")
+			print "screenshot ",name," saved"
 	def Quit(self):
 		self.App.Kill()
 		self.status = False
