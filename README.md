@@ -7,7 +7,7 @@ You can do projects with, for example, **arduino** or **microcontrollers** to tr
 
 ### [New] Windows executable for easy install ###
 
-I have just added to project a new **window standalone executable**, graph.exe. In order to run the graphicator you only need to **#download all files in some directory** and then run **graph.exe**. I am not sure if currently the serial port on windows works accurately (altough the program does), but if it does not I will make it compatible with that platform soon.
+I have just added to project a new **window standalone executable**, graph.exe. In order to run the graphicator you only need to **download all files in some directory** and then run **graph.exe**. I am not sure if currently the serial port on windows works accurately (altough the program does), but if it does not I will make it compatible with that platform soon.
 
 
 ### Introduction ###
@@ -45,7 +45,7 @@ And the other **command** is
 ```
 You should use this command to **send words** to be shown on the console of the program. Remember to use the **end of line** character also.
 
-**Warning**: As the program is beta version it can crash suddenly if you send commands that do not respect the format. Please avoid doing that, only send messages that apply to the rules
+**Warning**: As the program is **beta version** it can **crash suddenly** if you send commands that **do not respect the format**. Please avoid doing that, only send messages that **apply to the rules**
 
 
 **Report any bug** to ariel.nowik@gmail.com. This program is **totally free** for all so feel free to use it, modify it or send feedback. Good Luck guys!
