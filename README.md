@@ -6,8 +6,9 @@ You can do projects with, for example, **arduino** or **microcontrollers** to tr
 
 ### Introduction ###
 
-Hi. I'll explain how to use this simple but useful tool. First of all you need a **python** installation complemented with the **pygame** graphics library and the **pyserial** library. You'll find plenty of ways to install them on internet and usually you **won't have problems** when installing them. After that you only need to **execute** the final **graph.py** to make the program run.
-
+Hi. I'll explain how to use this simple but useful tool. First of all you need a **python** installation complemented with the **pygame** graphics library and the **pyserial** library. You'll find plenty of ways to install them on internet and usually you **won't have problems** when installing them. After that you only need to **execute** the final **graph.py** to make the program run. Here there are some links to make you learn how to install python, pygame and pyserial
+[How to install python - How to install py-serial](https://learn.adafruit.com/arduino-lesson-17-email-sending-movement-detector/installing-python-and-pyserial)
+[How to install pygame] (https://www.youtube.com/watch?v=0xgn-HKzZes) 
 
 The program should **detect the ports autonomously** and will test to check data of all of them with this **baudrates**
 + 4800
