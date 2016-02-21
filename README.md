@@ -10,7 +10,7 @@ The program should detect the ports autonomously and will test to check data of 
 You can change the baudrate when you enter a port, you should only click on the port title in the upper part of the screen.
 
 
-<h2>Which format should you use to send information to the program? <\h2>
+### Which format should you use to send information to the program? ###
 You must use json format. This means the two commands you can use actually are
 ```
 "{'COM':'plot', 'name':'Plot 1','value':4564564}\n"
