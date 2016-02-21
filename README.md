@@ -4,6 +4,12 @@ You can do projects with, for example, **arduino** or **microcontrollers** to tr
 
 ![alt tag](1456029137.92.png)
 
+
+### [New] Windows executable for easy install ###
+
+I have just added to project a new **window standalone executable**, graph.exe. In order to run the graphicator you only need to **#download all files in some directory** and then run **graph.exe**. I am not sure if currently the serial port on windows works accurately (altough the program does), but if it does not I will make it compatible with that platform soon.
+
+
 ### Introduction ###
 
 Hi. I'll explain how to use this simple but useful tool. First of all you need a **python** installation complemented with the **pygame** graphics library and the **pyserial** library. You'll find plenty of ways to install them on internet and usually you **won't have problems** when installing them. After that you only need to **execute** the final **graph.py** to make the program run. Here there are some links to make you learn how to install python, pygame and pyserial
