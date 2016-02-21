@@ -2,6 +2,8 @@
 Open Source Free Serial Port Client capable of graph values that are received in **JSON format**
 You can do projects with, for example, **arduino** or **microcontrollers** to transform data sent from them to computer into fancy **graphics**.
 
+![alt tag](1456028638.35.png)
+
 ### Introduction ###
 
 Hi. I'll explain how to use this simple but useful tool. First of all you need a **python** installation complemented with the **pygame** graphics library and the **pyserial** library. You'll find plenty of ways to install them on internet and usually you **won't have problems** when installing them. After that you only need to **execute** the final **graph.py** to make the program run.
@@ -38,5 +40,15 @@ You should use this command to **send words** to be shown on the console of the 
 
 
 **Report any bug** to ariel.nowik@gmail.com. This program is **totally free** for all so feel free to use it, modify it or send feedback. Good Luck guys!
+
+
+### Screenshots ###
+![alt tag](1456028622.43.png)
+![alt tag](1456028628.79.png)
+![alt tag](1456028631.55.png)
+![alt tag](1456028638.35.png)
+![alt tag](1456028641.77.png)
+![alt tag](1456028649.37.png)
+![alt tag](1456028654.02.png)
 
 
