@@ -54,3 +54,34 @@ You should use this command to **send words** to be shown on the console of the 
 ![alt tag](1456028654.02.png)
 
 
+
+
+### Bonus ###
+
+Easy and fast **instalation** and **run** for linux with commands (only *Linux*!). If you type these commands (and there are no **errors** the program will be installed and will be executed
+
+```
+sudo apt-get install python-pygame
+sudo apt-get install pyserial
+sudo apt-get install git
+git clone https://github.com/newtonis/SerialGraphicator/
+cd SerialGraphicator
+python graph.py
+```
+
+### Advice for linux ###
+
+In **linux** sometimes the serial port is **blocked by admin** by default (what will make the program throw an exception because of permisions). To solve this you can execute
+```
+sudo chmod -R 777 /dev
+```
+
+or more easily you can just **run the program on admin** mode
+instead of
+```
+python graph.py
+```
+you *type*
+```
+sudo python graph.py
+```
