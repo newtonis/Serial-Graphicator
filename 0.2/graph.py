@@ -212,6 +212,31 @@ def GetValueName(v):
 	v = float(v)
 	v /= 10
 	return add + str(v) + "MM"
+def GetValueName2(v):
+	if v < 0:
+		add = '-'
+		v = -v
+	else:
+		add = ''
+
+	if v <= 500:
+		return str(v)
+	v /= 10
+	v = float(v)
+	v /= 100
+	if (v <= 500):
+		return add + str(v) + "k"
+	v = int(v)
+	v /= 10
+	v = float(v)
+	v /= 100
+	if (v <= 500):
+		return add + str(v) + "M"
+	v = int(v)
+	v /= 10
+	v = float(v)
+	v /= 100
+	return add + str(v) + "MM"
 
 class GraphData:
 	def __init__(self , name , color , show_item):
@@ -322,6 +347,10 @@ class GraphDisplay:
 		self.holdTime = 0
 
 		self.playing = True
+
+		self.drawMark = None
+		self.drawMarkX = 0
+		self.drawMarkY = 0
 	def UpdateVariable(self , variable , value):
 		self.reference[variable].AddNewContent(value)
 	def CreateVariable(self , name , color):
@@ -381,7 +410,12 @@ class GraphDisplay:
 			current_time = time.time()*1000
 		else:
 			current_time = self.holdTime
+		drawn = False
 
+		mx , my = pygame.mouse.get_pos()
+		mx -= self.x
+		my -= self.y
+		flagcont = True
 		for x in range(len(self.variables)):
 			if not self.reference[ self.variables[x] ].GetEnabled():
 				continue
@@ -394,6 +428,7 @@ class GraphDisplay:
 			sordel = []
 			last_x = 0
 			last_y = 0
+			points = []
 			for y in range(len(vref.sorted)):
 				moment = vref.sorted[y]
 				value = content[ str(moment) ]
@@ -417,11 +452,51 @@ class GraphDisplay:
 				#print real_x
 				position_y = int(position_y)
 				real_x = int(real_x)
+
+				
 				if last_x != 0:
-					#$pygame.draw.circle(background,color,(real_x,position_y),2)
+					#pygame.draw.circle(background,color,(real_x,position_y),1)
 					pygame.draw.line(background,color,(last_x,last_y),(real_x,position_y),1)
 				last_x = real_x
 				last_y = position_y
+
+				points.append([real_x,position_y])
+			pos = 0
+
+			for y in range(len(vref.sorted)):
+				real_x = points[y][0]
+				position_y = points[y][1]
+				special = False
+				if not self.playing and not drawn:
+					if mx > real_x-10 and mx < real_x+10 and my > position_y - 10 and my < position_y + 10:
+						drawn = True
+						pos = y
+						special = True
+				if (not self.playing) and (not special):
+					pygame.draw.circle(background , self.reference[self.variables[x]].color , (real_x,position_y) , 3)
+					pygame.draw.circle(background , (200,200,200), (real_x,position_y) , 2)
+				
+			
+			if drawn and flagcont and not self.playing:
+				timea = vref.sorted[pos]
+				value = content[str(timea)]
+				timea = int(current_time) - int(timea)
+
+				flagcont = False
+				real_x = points[pos][0]
+				position_y = points[pos][1]
+				pygame.draw.circle(background , self.reference[self.variables[x]].color , (real_x,position_y) , 10)
+				pygame.draw.circle(background , (200,200,200), (real_x,position_y) , 7)
+				surface = pygame.surface.Surface((200,20))
+				surface.fill((255,255,255))
+				AddBorder(surface)
+				textValue = fonts.fontConsole[str(15)].render( GetTimeName( timea ) + " ; "+ GetValueName2( value ) , 1,(0,0,0) )
+				BlitInCenter(surface,textValue)
+				self.drawMark = surface 
+				self.drawMarkX = real_x - 80 
+				self.drawMarkY = position_y - 25
+			
+				#background.blit(surface , (real_x - 80 , position_y - 25))
 				#data.append( [real_x , position_y] )
 			delete.sort()
 			for y in range(len(delete)-1,-1,-1):
@@ -436,7 +511,8 @@ class GraphDisplay:
 			#	if x != 0:
 			#		pygame.draw.line(background,color,(data[x-1][0],data[x-1][1]),(data[x][0],data[x][1]))
 			#	pygame.draw.circle(background,color,(data[x][0],data[x][1]),2)
-		
+		if flagcont == True:
+			self.drawMark = None
 
 		for x in range(len(self.variables)):
 			if not self.reference[ self.variables[x] ].GetEnabled():
@@ -512,7 +588,8 @@ class GraphDisplay:
 				for x in range(len(self.variables)):
 					self.reference[ self.variables[x] ].SetHold()
 			self.playing = False
-
+		if self.drawMark:
+			screen.blit(self.drawMark,(self.x + self.drawMarkX,self.y + self.drawMarkY))
 	def UpdateChangeScale(self):
 		if not pygame.mouse.get_pressed()[0]:
 			self.last_pressed = False
