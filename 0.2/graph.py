@@ -16,6 +16,7 @@ SCREEN_WIDTH = 1024
 SCREEN_HEIGHT = 700
 
 baudrates = [4800 ,9600 , 14400 , 19200 , 28800 , 38400, 57600 , 115200]
+intervals = [60000 , 30000 , 15000 , 10000 , 5000 , 1000]
 
 def AddBorder(surface):
 	pygame.draw.line(surface, (0,0,0), (0,0), (0,surface.get_size()[1]),2)
@@ -62,13 +63,15 @@ class BasicApp:
 		pass
 
 class OptionSelector:
-	def __init__(self , width , x , y):
+	def __init__(self , width , x , y , size = 50 , textsize = 30 , centermode = False):
 		self.options = []
 		self.width = width
 		self.x = x
 		self.y = y
 		self.selected = 0
-
+		self.size = size
+		self.textSize = textsize
+		self.centermode = centermode
 	def AddOption( self , icon , text):
 		self.options.append({"icon":icon,"text":text})
 	def Refresh(self , screen):
@@ -86,11 +89,15 @@ class OptionSelector:
 				background = (50,50,50)
 
 			size = self.width / len(self.options)
-			surface = pygame.surface.Surface((size,50))
+			surface = pygame.surface.Surface((size,self.size))
 			surface.fill(background)
-			text = fonts.adamCG[str(30)].render(self.options[x]["text"],1,(200,200,200))
-			BlitInFirstQuarterX(surface,text)
-			BlitInCenterY(surface,self.options[x]["icon"],size-20-self.options[x]["icon"].get_size()[0])
+			text = fonts.adamCG[str(self.textSize)].render(self.options[x]["text"],1,(200,200,200))
+			if self.centermode:
+				BlitInCenter(surface,text)
+			else:
+				BlitInFirstQuarterX(surface,text)
+			if self.options[x]["icon"]:
+				BlitInCenterY(surface,self.options[x]["icon"],size-20-self.options[x]["icon"].get_size()[0])
 			screen.blit(surface,(add, self.y))
 			
 			if mx > self.x + add and mx < self.x + add + size and my > self.y and my < self.y + 50:
@@ -217,7 +224,7 @@ class GraphData:
 		self.graph_content = dict()
 		
 		self.last_value = 0
-
+		self.hold_value = 0
 		self.timeDraw = 10000
 
 		self.width =  200
@@ -230,6 +237,11 @@ class GraphData:
 		self.cty = 0
 		self.speed = 20
 		self.last_update = 0
+	def EraseAll(self):
+		self.graph_content = dict()
+		self.sorted = []
+	def SetHold(self):
+		self.hold_value = self.last_value
 	def GetEnabled(self):
 		return self.show_item.status
 	def UpdateCircleY(self):
@@ -281,7 +293,14 @@ class GraphDisplay:
 		colors.SetColors()
 		self.variables = []
 		self.reference = dict()
-		self.timeShow = 10000 ### 30 seconds of memory
+		self.timeId = 3
+		self.timeShow = intervals[self.timeId] ### 30 seconds of memory
+		self.X0change = 0
+		self.X1change = 0
+		self.Y0change = 0
+		self.Y1change = 0
+		self.last_pressed = False
+
 		self.timer = Timer()
 		self.widthA = widthTotal * 75 / 100
 		self.widthB = widthTotal * 25 / 100
@@ -296,6 +315,13 @@ class GraphDisplay:
 
 		self.graphMax = 1
 		self.graphMin = -1
+
+		self.holdSelector = OptionSelector(widthTotal * 35 / 100 , self.x , self.y + self.height , 30 , 20 , True)
+		self.holdSelector.AddOption(None , "Release")
+		self.holdSelector.AddOption(None , "Hold")
+		self.holdTime = 0
+
+		self.playing = True
 	def UpdateVariable(self , variable , value):
 		self.reference[variable].AddNewContent(value)
 	def CreateVariable(self , name , color):
@@ -312,6 +338,8 @@ class GraphDisplay:
 			start_y += distance
 
 	def FreshValue(self, variable , value , color):
+		if not self.playing:
+			return 0
 		if not self.reference.has_key(variable):
 			self.CreateVariable( variable , color)
 
@@ -342,11 +370,17 @@ class GraphDisplay:
 
 		text = fonts.fontConsole[str(20)].render(GetTimeName(self.timeShow),1,(0,0,0))
 		background.blit(text ,(27,self.graphH/2-20))
-		
+		self.X0change = 27
+		self.X1change = 27 + text.get_size()[0]
+		self.Y0change = self.graphH/2-20
+		self.Y1change = self.graphH/2-20 + text.get_size()[1]
+
 		#higher = 1
 		#lower  = -1
-		current_time = time.time()*1000
-
+		if self.playing:
+			current_time = time.time()*1000
+		else:
+			current_time = self.holdTime
 
 		for x in range(len(self.variables)):
 			if not self.reference[ self.variables[x] ].GetEnabled():
@@ -403,6 +437,7 @@ class GraphDisplay:
 			#		pygame.draw.line(background,color,(data[x-1][0],data[x-1][1]),(data[x][0],data[x][1]))
 			#	pygame.draw.circle(background,color,(data[x][0],data[x][1]),2)
 		
+
 		for x in range(len(self.variables)):
 			if not self.reference[ self.variables[x] ].GetEnabled():
 				continue
@@ -414,8 +449,9 @@ class GraphDisplay:
 			real_position = min_draw + (max_draw-min_draw) * value / (self.area)
 
 			#print "real = " , value , area , real_position 
-			self.reference[ self.variables[x] ].SetCircleY(real_position)
-			self.reference[ self.variables[x] ].UpdateCircleY()
+			if self.playing:
+				self.reference[ self.variables[x] ].SetCircleY(real_position)
+				self.reference[ self.variables[x] ].UpdateCircleY()
 
 		for x in range(len(self.variables)):
 			if not self.reference[ self.variables[x] ] .GetEnabled():
@@ -436,7 +472,11 @@ class GraphDisplay:
 		list_surface.fill((150,150,150))
 
 		return list_surface
+	def ClearData(self):
+		for x in range(len(self.variables)):
+			self.reference[ self.variables[x] ].EraseAll()
 	def Refresh(self,screen):
+		self.UpdateChangeScale() #check if user clicked to change scale
 		self.CalcGraph()
 		total_surface = pygame.surface.Surface((self.widthTotal,self.height))
 		total_surface.blit( self.GetGraphSurface() , (0,0))
@@ -449,8 +489,10 @@ class GraphDisplay:
 		for x in range(len(self.variables)):
 			if not self.reference[ self.variables[x] ].GetEnabled():
 				continue
-			last_value = self.reference[ self.variables[x] ].last_value
-
+			if self.playing:
+				last_value = self.reference[ self.variables[x] ].last_value
+			else:
+				last_value = self.reference[self.variables[x]].hold_value
 			surface = pygame.surface.Surface((40,20))
 			surface.fill((255,255,255))
 			AddBorder(surface)
@@ -458,6 +500,35 @@ class GraphDisplay:
 			BlitInCenter(surface,textValue)
 			#print self.GetRelPos(x)
 			screen.blit(surface , (self.x + self.widthA - 20 , self.y + self.GetRelPos(x) - 5 ))
+		self.holdSelector.Refresh(screen)
+		if self.holdSelector.GetSelected() == "Release":
+			if self.playing == False:
+				self.ClearData()
+			self.playing = True
+
+		elif self.holdSelector.GetSelected() == "Hold":
+			if self.playing == True:
+				self.holdTime = time.time() * 1000
+				for x in range(len(self.variables)):
+					self.reference[ self.variables[x] ].SetHold()
+			self.playing = False
+
+	def UpdateChangeScale(self):
+		if not pygame.mouse.get_pressed()[0]:
+			self.last_pressed = False
+		mx , my = pygame.mouse.get_pos()
+		if mx > self.x + self.X0change and mx < self.x + self.X1change:
+			if my > self.y + self.Y0change and my < self.y + self.Y1change:
+				if pygame.mouse.get_pressed()[0] and not self.last_pressed:
+					self.UpdateMode( self.timeId + 1)
+					self.last_pressed = True
+	def UpdateMode(self, mode):
+		if mode >= len(intervals):
+			mode = 0
+		self.timeId = mode
+		self.timeShow = intervals[self.timeId]
+		for x in range(len(self.variables)):
+			self.reference[ self.variables[x] ] . timeDraw = self.timeShow
 
 	def BlitMaxMin(self , surface):
 		textMax = fonts.adamCG[str(20)].render( GetValueName( self.area/2 ),1,(0,0,0))
