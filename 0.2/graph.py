@@ -16,7 +16,7 @@ SCREEN_WIDTH = 1024
 SCREEN_HEIGHT = 700
 
 baudrates = [4800 ,9600 , 14400 , 19200 , 28800 , 38400, 57600 , 115200]
-intervals = [60000 , 30000 , 15000 , 10000 , 5000 , 1000]
+intervals = [60000 , 30000 , 20000, 18000 ,15000 , 12000 , 10000 , 5000 , 1000]
 
 def AddBorder(surface):
 	pygame.draw.line(surface, (0,0,0), (0,0), (0,surface.get_size()[1]),2)
@@ -250,7 +250,7 @@ class GraphData:
 		
 		self.last_value = 0
 		self.hold_value = 0
-		self.timeDraw = 10000
+		self.timeDraw = 60000
 
 		self.width =  200
 		self.height = 200
@@ -284,14 +284,17 @@ class GraphData:
 		self.width = w 
 		self.height = h
 	def AddNewContent(self,value):
-		mkm = time.time()*1000
-		if self.last_value != 0 and mkm - self.last_value < 1000:
-			return 0
-		mkm = int(mkm)
+		try:
+			mkm = time.time()*1000
+			if int(self.last_value) != 0 and mkm - int(self.last_value) < 1000:
+				return 0
+			mkm = int(mkm)
 
-		self.graph_content[str(mkm)] = value
-		self.sorted.append(str(mkm));
-		self.last_value = value
+			self.graph_content[str(mkm)] = value
+			self.sorted.append(str(mkm));
+			self.last_value = value
+		except:
+			pass
 	def GetMax(self):
 		max_value = -1
 		for x in range(len(self.graph_content.keys())):
@@ -318,7 +321,7 @@ class GraphDisplay:
 		colors.SetColors()
 		self.variables = []
 		self.reference = dict()
-		self.timeId = 3
+		self.timeId = 0
 		self.timeShow = intervals[self.timeId] ### 30 seconds of memory
 		self.X0change = 0
 		self.X1change = 0
@@ -371,7 +374,7 @@ class GraphDisplay:
 			return 0
 		if not self.reference.has_key(variable):
 			self.CreateVariable( variable , color)
-
+		print variable , value 
 		self.UpdateVariable(variable , value)
 	def CalcGraph(self):
 		pass
@@ -442,7 +445,7 @@ class GraphDisplay:
 				start_x = 25
 				end_x = self.graphW - 25
 				#print start_x , end_x
-				value = (-value) + self.area/2
+				value = (-value) + int(self.area)/2
 				min_draw = 20
 				max_draw = self.graphH - 20
 			
@@ -724,6 +727,7 @@ class ConnectionWindow(BasicApp):
 
 
 	def Handle(self,data):
+		#print data
 		try:
 			converted = ast.literal_eval(data)
 		except:
@@ -844,7 +848,11 @@ class SelectionWindow(BasicApp):
 		if self.status == 0:
 			self.status = 1
 			self.serial = SerialModule()
-			self.serial.ConnectTo(self.ports[self.testing]["data"][0] , baudrates[self.baud])
+			try:
+				self.serial.ConnectTo(self.ports[self.testing]["data"][0] , baudrates[self.baud])
+			except OSError:
+				self.status = 0
+				print "Error permision denied"
 		elif self.status == 1:
 			self.status = 2
 			self.serial.Update()
@@ -948,6 +956,7 @@ class ApplicationGlobal:
 		self.status = True
 		self.App = None
 		self.flag = False
+		self.lastpresssed = False
 	def SetNewApp(self , app):
 		self.App = app
 		self.App.headGlobal = self
@@ -965,6 +974,12 @@ class ApplicationGlobal:
 			name =  str( time.time() )+ ".png"
 			pygame.image.save(self.screen , str( time.time() )+ ".png")
 			print "screenshot ",name," saved"
+
+		if pygame.key.get_pressed()[ pygame.K_F11 ] and not self.lastpresssed:
+			self.lastpresssed = True
+			self.screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT),pygame.FULLSCREEN)
+		if not pygame.key.get_pressed()[pygame.K_F11]:
+			self.lastpresssed  = False
 	def Quit(self):
 		self.App.Kill()
 		self.status = False
@@ -979,6 +994,7 @@ def main():
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				app.Quit()
+
 		app.Refresh()
 
 
