@@ -53,7 +53,8 @@ You can also use the **Hold** and **Release** commands to make the program to st
 If you send them **more than once** there won't be problems. If the graphicator status is on hold and you send a hold signal nothing will happen, the same if the graphicator is currently **ploting** a graph and you seld the **release signal**
 
 And the last (up to now) and very useful command is the **Settle** command. With this command you can draw a line in the graph with a **color** and a **name**. You can use it to divide the graph in sectors (for example to be sure which part of the graph correspont to different states of the program). You are obligated to set a color and a name for the line, otherwise the command **will be ignored**
-``` 
+
+``` json 
 {'COM':'Settle','name':'Test Mark 1','color':(100,100,255)}\n
 ```
 Currently the program will **replace an old settle** if it receives a settle signal with the **same name**. We may change this in the future, but until now you can for example send the same name with a 1, a 2, a 3 if you don't want the marks to be erased.
