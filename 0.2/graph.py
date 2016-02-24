@@ -376,12 +376,20 @@ class GraphDisplay:
 	def FreshValue(self, variable , value , color):
 		if not self.playing:
 			return 0
-		if value < 10000000 or value > 10000000: #potential errors
-			return 0
-		if not self.reference.has_key(variable):
-			self.CreateVariable( variable , color)
-		#print variable , value 
-		self.UpdateVariable(variable , value)
+		try:
+			if int(value) > 100000000:
+				print "overflow" , value
+				return 0
+			if int(value) < -100000000:
+				print "overflow",value
+				return 0
+			if not self.reference.has_key(variable):
+				self.CreateVariable( variable , color)
+			
+			#print variable , value 
+			self.UpdateVariable(variable , value)
+		except:
+			print "value error"
 	def CalcGraph(self):
 		pass
 	def GetArea(self):
@@ -631,6 +639,7 @@ class GraphDisplay:
 			self.Release()
 		elif self.holdSelector.GetSelected() == "Hold":
 			self.Hold()
+
 		if pygame.key.get_pressed()[pygame.K_h]:
 			self.Hold()
 			
@@ -640,17 +649,19 @@ class GraphDisplay:
 		if self.drawMark:
 			screen.blit(self.drawMark,(self.x + self.drawMarkX,self.y + self.drawMarkY))
 	def Release(self):
-		self.holdSelector.selected = 0
 		if self.playing == False:
+			self.holdSelector.selected = 0
 			self.ClearData()
-		self.playing = True
+			self.playing = True
+			self.new_hold = None
 	def Hold(self):
-		self.holdSelector.selected = 1
 		if self.playing == True:
+			print "Hold"
+			self.holdSelector.selected = 1
 			self.holdTime = time.time() * 1000
 			for x in range(len(self.variables)):
 				self.reference[ self.variables[x] ].SetHold()
-		self.playing = False
+			self.playing = False
 	def UpdateChangeScale(self):
 		if not pygame.mouse.get_pressed()[0]:
 			self.last_pressed = False
@@ -771,6 +782,10 @@ class ConnectionWindow(BasicApp):
 			self.shownArea = self.Console
 		elif self.selector.GetSelected() == "Graph":
 			self.shownArea = self.graphDisplay
+		if pygame.key.get_pressed()[pygame.K_LEFT]:
+			self.selector.selected = 0
+		if pygame.key.get_pressed()[pygame.K_RIGHT]:
+			self.selector.selected = 1
 
 		self.shownArea.Refresh(self.screen)
 		#if self.timer.MS() > 1000:
@@ -817,7 +832,6 @@ class ConnectionWindow(BasicApp):
 		elif converted["COM"] == "Release":
 			self.graphDisplay.Release()
 		elif converted["COM"] == "Settle":
-			print "settle"
 			if not converted.has_key("name"):
 				return
 			if not converted.has_key("color"):
