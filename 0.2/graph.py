@@ -376,6 +376,8 @@ class GraphDisplay:
 	def FreshValue(self, variable , value , color):
 		if not self.playing:
 			return 0
+		if value < 10000000 or value > 10000000: #potential errors
+			return 0
 		if not self.reference.has_key(variable):
 			self.CreateVariable( variable , color)
 		#print variable , value 
@@ -953,7 +955,10 @@ class SelectionWindow(BasicApp):
 		elif self.status == 2:
 			self.status = 0
 	def GetPorts(self):
-		ports = list(serial.tools.list_ports.comports())
+		try:
+			ports = list(serial.tools.list_ports.comports())
+		except:
+			print "Error trying to obtain ports"
 		real = []
 		for p in ports:
 			if p[2] != 'n/a':
