@@ -33,19 +33,33 @@ You can **change the baudrate** when you enter a port, you should only click on 
 
 
 ### Which format should you use to send information to the program? ###
-You must use **json** format. This means the **two commands** you can use actually are
+You must use **json** format. This means the **five commands** you can use actually are
 ``` json
 "{'COM':'plot', 'name':'Plot 1','value':4564564}\n"
 ```
 to **plot** a point in the **graph**, where the 4564564 is the value to graph in that instant, and 'Plot 1' the name of the graph associated with it (the program autodetects when there is a new signal so no need of initial signal, just **update signals**). And remeber to set a '\n' (**end of line**) character after each signal sent because otherwise the program won't graph anything as it **will wait until the '\n' arrives** to divide the **signal**. If you want to **set the color** of the signal (rather than a random number) you can add a "color":(r,g,b) parameter altough I haven't tested yet it should work.
 
-And the other **command** is 
+Other **command** is 
 ``` json
 "{'COM':'line','value':'This is a test of Serial Graphicator'}\n"
 ```
 You should use this command to **send words** to be shown on the console of the program. Remember to use the **end of line** character also.
 
-**Warning**: As the program is **beta version** it can **crash suddenly** if you send commands that **do not respect the format**. Please avoid doing that, only send messages that **apply to the rules**
+You can also use the **Hold** and **Release** commands to make the program to stop graphicating (so you can send a signal in the exact moment you don't want to process data anymore) These commands have **no parameters**
+``` json
+"{'COM':'Hold'}\n"
+"{'COM':'Release'}\n"
+```
+If you send them **more than once** there won't be problems. If the graphicator status is on hold and you send a hold signal nothing will happen, the same if the graphicator is currently **ploting** a graph and you seld the **release signal**
+
+And the last (up to now) and very useful command is the **Settle** command. With this command you can draw a line in the graph with a **color** and a **name**. You can use it to divide the graph in sectors (for example to be sure which part of the graph correspont to different states of the program). You are obligated to set a color and a name for the line, otherwise the command **will be ignored**
+``` 
+{'COM':'Settle','name':'Test Mark 1','color':(100,100,255)}\n
+```
+Currently the program will **replace an old settle** if it receives a settle signal with the **same name**. We may change this in the future, but until now you can for example send the same name with a 1, a 2, a 3 if you don't want the marks to be erased.
+
+
+**Warning**: As the program is **beta version** it can **crash suddenly** if you send commands that **do not respect the format**. Please avoid doing that, only send messages that **apply to the rules**. We are working to make the program to handle these cases of errors properly (and it is going better from time to time)
 
 
 **Report any bug** to ariel.nowik@gmail.com. This program is **totally free** for all so feel free to use it, modify it or send feedback. Good Luck guys!
