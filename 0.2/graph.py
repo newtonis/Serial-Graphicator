@@ -16,7 +16,7 @@ SCREEN_WIDTH = 1024
 SCREEN_HEIGHT = 700
 
 baudrates = [4800 ,9600 , 14400 , 19200 , 28800 , 38400, 57600 , 115200]
-intervals = [60000 , 30000 , 20000, 18000 ,15000 , 12000 , 10000 , 5000 , 1000]
+intervals = [60000 , 30000 , 20000, 18000 ,15000 , 12000 , 10000 , 7500 , 5000 , 3000, 2000 , 1000]
 
 def AddBorder(surface):
 	pygame.draw.line(surface, (0,0,0), (0,0), (0,surface.get_size()[1]),2)
@@ -321,6 +321,8 @@ class GraphDisplay:
 		colors.SetColors()
 		self.variables = []
 		self.reference = dict()
+		self.settles = dict() ## points on time that divides the table
+
 		self.timeId = 0
 		self.timeShow = intervals[self.timeId] ### 30 seconds of memory
 		self.X0change = 0
@@ -354,6 +356,8 @@ class GraphDisplay:
 		self.drawMark = None
 		self.drawMarkX = 0
 		self.drawMarkY = 0
+
+		self.new_hold = None
 	def UpdateVariable(self , variable , value):
 		self.reference[variable].AddNewContent(value)
 	def CreateVariable(self , name , color):
@@ -374,7 +378,7 @@ class GraphDisplay:
 			return 0
 		if not self.reference.has_key(variable):
 			self.CreateVariable( variable , color)
-		print variable , value 
+		#print variable , value 
 		self.UpdateVariable(variable , value)
 	def CalcGraph(self):
 		pass
@@ -412,7 +416,11 @@ class GraphDisplay:
 		if self.playing:
 			current_time = time.time()*1000
 		else:
-			current_time = self.holdTime
+			if self.new_hold:
+				current_time = self.new_hold
+			else:
+				current_time = self.holdTime
+
 		drawn = False
 
 		mx , my = pygame.mouse.get_pos()
@@ -422,7 +430,8 @@ class GraphDisplay:
 		for x in range(len(self.variables)):
 			if not self.reference[ self.variables[x] ].GetEnabled():
 				continue
-			lentime = self.reference[ self.variables[x] ] . timeDraw
+			#lentime = self.reference[ self.variables[x] ] . timeDraw
+			lentime = self.timeShow
 			vref =  self.reference[ self.variables[x] ]
 			content = self.reference[self.variables[x]].graph_content
 			#data = []
@@ -437,7 +446,7 @@ class GraphDisplay:
 				value = content[ str(moment) ]
 				
 				dif = int(current_time) - int(moment)
-				if dif > lentime:
+				if dif > intervals[0]:
 					delete.append(vref.sorted[y] )
 					sordel.append(y)
 					#continue # too much time
@@ -481,10 +490,13 @@ class GraphDisplay:
 				
 			
 			if drawn and flagcont and not self.playing:
-				timea = vref.sorted[pos]
-				value = content[str(timea)]
-				timea = int(current_time) - int(timea)
+				absolute = vref.sorted[pos]
 
+				value = content[str(absolute)]
+				if not self.new_hold:
+					timea = int(current_time) - int(absolute)
+				else:
+					timea = int(self.holdTime) - int(absolute)
 				flagcont = False
 				real_x = points[pos][0]
 				position_y = points[pos][1]
@@ -498,7 +510,16 @@ class GraphDisplay:
 				self.drawMark = surface 
 				self.drawMarkX = real_x - 80 
 				self.drawMarkY = position_y - 25
-			
+				if pygame.mouse.get_pressed()[0] and not self.last_pressed:
+					self.last_pressed = True
+					self.UpdateMode(self.timeId+1)
+					if self.timeId == 0:
+						self.new_hold = None
+					else:
+						self.new_hold = int(absolute)+intervals[self.timeId]/2
+
+
+					
 				#background.blit(surface , (real_x - 80 , position_y - 25))
 				#data.append( [real_x , position_y] )
 			delete.sort()
@@ -514,6 +535,7 @@ class GraphDisplay:
 			#	if x != 0:
 			#		pygame.draw.line(background,color,(data[x-1][0],data[x-1][1]),(data[x][0],data[x][1]))
 			#	pygame.draw.circle(background,color,(data[x][0],data[x][1]),2)
+		
 		if flagcont == True:
 			self.drawMark = None
 
@@ -540,6 +562,28 @@ class GraphDisplay:
 			pygame.draw.circle(background, self.reference[self.variables[x]].color, (self.graphW-25,y_pos), 8)
 			pygame.draw.circle(background, (200,200,200), (self.graphW-25,y_pos), 5)
 
+		for x in range(len(self.settles.keys())):
+			name = self.settles.keys()[x]
+			moment = self.settles[name]["time"]
+			color = self.settles[name]["color"]
+
+			dif = int(current_time) - int(moment)
+			lentime = self.timeShow
+
+			start_x = 25
+			end_x = self.graphW - 25
+			position_x = float(lentime - dif) / float(lentime)
+
+			real_x = start_x + (end_x-start_x) * position_x
+			real_x = int(real_x)
+
+			#text = fonts.adamCG[str(15)].render(name , 1 ,color)
+			#text = pygame.transform.rotate(text,90)
+			text = self.settles[name]["text"]
+
+			pygame.draw.line(background,color,(real_x,0),(real_x,self.height))
+			background.blit(text , (real_x-15,5))
+
 		AddBorder(background)
 		BlitInCenter(graph_surface,background)
 
@@ -554,6 +598,7 @@ class GraphDisplay:
 	def ClearData(self):
 		for x in range(len(self.variables)):
 			self.reference[ self.variables[x] ].EraseAll()
+		self.settles = dict()
 	def Refresh(self,screen):
 		self.UpdateChangeScale() #check if user clicked to change scale
 		self.CalcGraph()
@@ -581,18 +626,29 @@ class GraphDisplay:
 			screen.blit(surface , (self.x + self.widthA - 20 , self.y + self.GetRelPos(x) - 5 ))
 		self.holdSelector.Refresh(screen)
 		if self.holdSelector.GetSelected() == "Release":
-			if self.playing == False:
-				self.ClearData()
-			self.playing = True
-
+			self.Release()
 		elif self.holdSelector.GetSelected() == "Hold":
-			if self.playing == True:
-				self.holdTime = time.time() * 1000
-				for x in range(len(self.variables)):
-					self.reference[ self.variables[x] ].SetHold()
-			self.playing = False
+			self.Hold()
+		if pygame.key.get_pressed()[pygame.K_h]:
+			self.Hold()
+			
+		if pygame.key.get_pressed()[pygame.K_r]:
+			self.Release()
+			
 		if self.drawMark:
 			screen.blit(self.drawMark,(self.x + self.drawMarkX,self.y + self.drawMarkY))
+	def Release(self):
+		self.holdSelector.selected = 0
+		if self.playing == False:
+			self.ClearData()
+		self.playing = True
+	def Hold(self):
+		self.holdSelector.selected = 1
+		if self.playing == True:
+			self.holdTime = time.time() * 1000
+			for x in range(len(self.variables)):
+				self.reference[ self.variables[x] ].SetHold()
+		self.playing = False
 	def UpdateChangeScale(self):
 		if not pygame.mouse.get_pressed()[0]:
 			self.last_pressed = False
@@ -616,6 +672,10 @@ class GraphDisplay:
 		textH = textMax.get_size()[1]/2 - 2
 		surface.blit( textMax , (self.widthA + 20 , 25 - textH) )
 		surface.blit( textMin , (self.widthA + 20 , self.graphH-25 - textH) )
+	def AddSettle(self , name , color ):
+		text = fonts.adamCG[str(15)].render(name , 1 ,color)
+		text = pygame.transform.rotate(text,90)
+		self.settles[name] = {"color":color , "time":time.time() * 1000,"text":text} ## settle moment
 
 class Console:
 	def __init__(self , x , y , width , height):
@@ -750,6 +810,17 @@ class ConnectionWindow(BasicApp):
 				self.graphDisplay.FreshValue(converted["name"],converted["value"],converted["color"])
 			else:
 				self.graphDisplay.FreshValue(converted["name"],converted["value"],colors.randomColor())
+		elif converted["COM"] == "Hold":
+			self.graphDisplay.Hold()
+		elif converted["COM"] == "Release":
+			self.graphDisplay.Release()
+		elif converted["COM"] == "Settle":
+			print "settle"
+			if not converted.has_key("name"):
+				return
+			if not converted.has_key("color"):
+				return
+			self.graphDisplay.AddSettle( converted["name"] , converted["color"])
 	def UpdateData(self):
 		recv = self.recv
 		self.recv = []
@@ -776,9 +847,7 @@ class ConnectionWindow(BasicApp):
 			
 			testSerial.Update()
 			data = testSerial.GetData()
-			if len(data) > 0:
-				print data
-				#self.recv.append(data)
+			
 		testSerial.Kill()
 	def Kill(self):
 		self.ConnectionAlive = False
@@ -812,6 +881,7 @@ class SelectionWindow(BasicApp):
 		self.baud   = 0
 
 		self.serial = None
+		self.last_pressed = False
 	def Kill(self):
 		self.testConnection = False
 	def Refresh(self):
@@ -831,16 +901,26 @@ class SelectionWindow(BasicApp):
 			xdraw = SCREEN_WIDTH/2-150
 			ydraw = SCREEN_HEIGHT/4+y*60
 
-			text = fonts.adamCG[str(30)].render(port["data"][0],1,color)
+			text = fonts.adamCG[str(30)].render(port["data"][0] + " (" + str(port["baudrate"]) + ")" ,1,color)
 			self.screen.blit(text,(xdraw,ydraw))
 			port["button"].x = xdraw + 400 
 			port["button"].y = ydraw + text.get_size()[1]/2
 			port["button"].Refresh(self.screen)
 			if port["button"].Pressed():
 				self.Connect( port["data"][0] , port["baudrate"] , port["bnumber"])
+
+			if mx > xdraw and mx < xdraw + text.get_size()[0] and my > ydraw and my < ydraw + text.get_size()[1]:
+				if pygame.mouse.get_pressed()[0] and not self.last_pressed:
+					self.last_pressed = True
+					port["bnumber"] += 1
+					if port["bnumber"] == len(baudrates):
+						port["bnumber"] = 0
+					port["baudrate"] = baudrates[port["bnumber"]]
 			y += 1
 		if self.timer.MS() > 2000:
 			self.GetPorts()
+		if not pygame.mouse.get_pressed()[0]:
+			self.last_pressed = False
 	def UpdateConnection(self):
 		if self.testing == -1:
 			return 0 # no testing at all
@@ -849,7 +929,7 @@ class SelectionWindow(BasicApp):
 			self.status = 1
 			self.serial = SerialModule()
 			try:
-				self.serial.ConnectTo(self.ports[self.testing]["data"][0] , baudrates[self.baud])
+				self.serial.ConnectTo(self.ports[self.testing]["data"][0] , self.ports[self.testing]["baudrate"])
 			except OSError:
 				self.status = 0
 				print "Error permision denied"
@@ -858,17 +938,14 @@ class SelectionWindow(BasicApp):
 			self.serial.Update()
 			data = self.serial.GetData()
 			if len(data) == 0:
-				self.baud += 1
-				if self.baud == len(baudrates):
-					self.baud = 0
-					self.testing += 1
-					if self.testing >= len(self.ports):
-						self.testing = 0
+				self.testing += 1
+				if self.testing >= len(self.ports):
+					self.testing = 0
 			else:
 				self.ports[self.testing]["last_time"] = time.time()
-				self.ports[self.testing]["baudrate"] = baudrates[self.baud]
-				self.ports[self.testing]["bnumber"] = self.baud
-				self.baud = 0
+				#self.ports[self.testing]["baudrate"] = baudrates[self.baud]
+				#self.ports[self.testing]["bnumber"] = self.baud
+				#self.baud = 0
 				self.testing += 1
 				if self.testing >= len(self.ports):
 					self.testing = 0
@@ -915,24 +992,25 @@ class TestApp(BasicApp):
 				self.QuitFor(SelectionWindow())
 			self.screen.fill((grey,grey,grey))
 		if self.status == 0:
-			if self.timer.MS() >= 750:
+			if self.timer.MS() >= 200:
 				self.status = 1
 		elif self.status == 1:
 			self.show1 = True
-			if self.timer.MS() >= 1300:
+			if self.timer.MS() >= 400:
 				self.status = 2
 				self.timer.Reset()
 				self.timer.Play()
 		elif self.status == 2:
 			self.show2 = True
 			
-			if self.timer.MS() >= 1700:
+			if self.timer.MS() >= 1000:
 				self.status = 3
 				self.timer.Reset()
 				self.timer.Play()
 				self.show3 = 1
+				self.show3pos = -self.timer.MS()+SCREEN_WIDTH
 		elif self.status == 3:
-			self.show3pos = -self.timer.MS()/2+SCREEN_WIDTH
+			self.show3pos = -self.timer.MS()+SCREEN_WIDTH
 			if self.show3pos < 30:
 				self.status = 4
 				self.timer.Reset()
@@ -957,6 +1035,7 @@ class ApplicationGlobal:
 		self.App = None
 		self.flag = False
 		self.lastpresssed = False
+		self.fullscreen = 0
 	def SetNewApp(self , app):
 		self.App = app
 		self.App.headGlobal = self
@@ -977,7 +1056,13 @@ class ApplicationGlobal:
 
 		if pygame.key.get_pressed()[ pygame.K_F11 ] and not self.lastpresssed:
 			self.lastpresssed = True
-			self.screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT),pygame.FULLSCREEN)
+			if self.fullscreen == 0:
+				self.screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT),pygame.FULLSCREEN)
+				self.fullscreen = 1
+			else:
+				self.fullscreen = 0
+				self.screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
+
 		if not pygame.key.get_pressed()[pygame.K_F11]:
 			self.lastpresssed  = False
 	def Quit(self):
@@ -994,6 +1079,8 @@ def main():
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				app.Quit()
+		if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+			app.Quit()
 
 		app.Refresh()
 
