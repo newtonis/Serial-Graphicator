@@ -80,13 +80,14 @@ Currently the program will **replace an old settle** if it receives a settle sig
 
 ### Bonus ###
 
-Easy and fast **instalation** and **run** for linux with commands (only *Linux*!). If you type these commands (and there are no **errors** the program will be installed and will be executed
+Easy and fast **instalation** and **run** for linux with commands (only *Linux*!). If you type these commands (and there are no **errors** the program will be installed and will be executed)
 
 ```
 sudo apt-get install python-pygame
 sudo apt-get install git
 git clone https://github.com/newtonis/SerialGraphicator/
 cd SerialGraphicator
+cd 0.2
 python graph.py
 ```
 
